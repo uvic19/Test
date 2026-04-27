@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PWA Test App</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0d47a1">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0d47a1;
+            --primary-light: #5472d3;
+            --primary-dark: #002171;
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --text: #333333;
+            --text-light: #757575;
+            --border: #e0e0e0;
+            --success: #4caf50;
+            --error: #f44336;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+        
+        header { background-color: var(--primary); color: white; padding: 16px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10; font-weight: bold; font-size: 18px; }
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; position: relative; }
+        
+        .screen { display: none; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        h2 { font-size: 18px; margin-bottom: 12px; color: var(--primary); }
+        h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+        p { margin-bottom: 12px; line-height: 1.5; color: var(--text); }
+        
+        .btn { display: block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; margin-bottom: 12px; cursor: pointer; transition: background 0.2s; text-align: center; }
+        .btn:active { background: var(--primary-dark); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-outline:active { background: rgba(13, 71, 161, 0.1); }
+        .btn-danger { background: var(--error); }
+        .btn-danger:active { background: #d32f2f; }
+        
+        input[type="email"], input[type="password"] { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; font-size: 16px; }
+        
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 10; border-top: 1px solid var(--border); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-light); cursor: pointer; font-size: 12px; width: 25%; transition: color 0.2s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 24px; margin-bottom: 4px; }
+        
+        #status-log { background: #222; color: #0f0; font-family: monospace; font-size: 12px; padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; margin-top: 16px; }
+        .log-entry { margin-bottom: 4px; word-break: break-all; }
+        .log-success { color: #4caf50; }
+        .log-error { color: #f44336; }
+        .log-info { color: #2196f3; }
+        
+        #app-nav { display: none; }
+        #camera-preview { width: 100%; border-radius: 8px; display: none; background: #000; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <header id="app-header">PWA Test App</header>
+    
+    <main id="main-content">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="card" style="margin-top: 20px;">
+                <h2 style="text-align: center;">Welcome</h2>
+                <p style="text-align: center; color: var(--text-light);">Sign in to continue</p>
+                <input type="email" id="login-email" placeholder="Email" value="test@example.com">
+                <input type="password" id="login-pass" placeholder="Password" value="password123">
+                <button class="btn" onclick="doLogin()">Login</button>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen">
+            <div class="card">
+                <h2>Dashboard</h2>
+                <p>Welcome to the PWA Test App. Use the navigation below to access different testing labs.</p>
+            </div>
+            <div class="card">
+                <h3>App Status</h3>
+                <p>Service Worker: <strong id="sw-status" style="color:var(--text-light)">Checking...</strong></p>
+                <p>Notification Perm: <strong id="notif-status" style="color:var(--text-light)">Checking...</strong></p>
+            </div>
+        </div>
+
+        <!-- Notification Lab -->
+        <div id="notifications-screen" class="screen">
+            <div class="card">
+                <h2>Notification Lab</h2>
+                <p style="color:var(--text-light); font-size:14px;">Test Web Push & Local Notifications</p>
+                <hr style="border:0; border-top:1px solid var(--border); margin:12px 0;">
+                
+                <button class="btn btn-outline" onclick="requestNotifPermission()">Request Permission</button>
+                <button class="btn" onclick="sendInstantNotif()">Send Instant Notification</button>
+                <button class="btn" onclick="scheduleNotif(10000, '10 Second Delay')">Schedule 10 Second Delay</button>
+                <button class="btn" onclick="scheduleNotif(30000, '30 Second Delay')">Schedule 30 Second Delay</button>
+                <button class="btn" onclick="scheduleNotif(60000, 'Background Test')">Background Notification Test (1 min)</button>
+                <button class="btn" onclick="schedulePersistent(300000, 'Persistent Reminder')">Persistent Reminder Test (5 mins)</button>
+                <button class="btn btn-danger" onclick="cancelAllNotifs()">Cancel All Scheduled</button>
+            </div>
+        </div>
+
+        <!-- Device Tests -->
+        <div id="device-tests-screen" class="screen">
+            <div class="card">
+                <h2>Device API Tests</h2>
+                <button class="btn btn-outline" onclick="testCamera()">Test Camera</button>
+                <button class="btn btn-outline" onclick="testMicrophone()">Test Microphone (5s)</button>
+                <button class="btn btn-outline" onclick="testQRCode()">QR Code Scanner</button>
+                <button class="btn btn-outline" onclick="testVibration()">Test Vibration</button>
+                
+                <video id="camera-preview" autoplay playsinline></video>
+                <audio id="audio-playback" controls style="display:none; width:100%; margin-bottom:12px;"></audio>
+                <button id="stop-cam-btn" class="btn btn-danger" style="display:none;" onclick="stopCamera()">Stop Camera</button>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile-screen" class="screen">
+            <div class="card" style="text-align: center;">
+                <div style="width:80px; height:80px; background:var(--primary); color:white; border-radius:50%; line-height:80px; font-size:32px; margin: 0 auto 16px auto;">P</div>
+                <h2>Test User</h2>
+                <p style="color:var(--text-light); margin-bottom: 16px;">test@example.com</p>
+                <button class="btn btn-outline" onclick="doLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div id="status-log">
+            <div class="log-entry log-info">[System] App initialized</div>
+        </div>
+    </main>
+
+    <nav id="app-nav">
+        <div class="nav-item active" onclick="switchTab('home-screen', this)">
+            <span class="material-icons nav-icon">home</span>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('notifications-screen', this)">
+            <span class="material-icons nav-icon">notifications</span>
+            <span>Notif Lab</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('device-tests-screen', this)">
+            <span class="material-icons nav-icon">smartphone</span>
+            <span>Devices</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('profile-screen', this)">
+            <span class="material-icons nav-icon">person</span>
+            <span>Profile</span>
+        </div>
+    </nav>
+
+    <script>
+        // --- Core UI Logic ---
+        function log(msg, type='info') {
+            const logBox = document.getElementById('status-log');
+            if(!logBox) return;
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = `log-entry log-${type}`;
+            div.innerText = `[${time}] ${msg}`;
+            logBox.prepend(div);
+        }
+
+        function switchTab(screenId, navElement) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if(navElement) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+        }
+
+        function doLogin() {
+            log('User logged in', 'success');
+            document.getElementById('app-nav').style.display = 'flex';
+            switchTab('home-screen', document.querySelector('.nav-item'));
+        }
+
+        function doLogout() {
+            log('User logged out', 'info');
+            document.getElementById('app-nav').style.display = 'none';
+            switchTab('login-screen', null);
+            stopCamera();
+        }
+
+        // --- Service Worker & PWA ---
+        let swRegistration = null;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    swRegistration = reg;
+                    document.getElementById('sw-status').innerText = 'Registered';
+                    document.getElementById('sw-status').style.color = 'var(--success)';
+                    log('Service Worker registered', 'success');
+                }).catch(err => {
+                    document.getElementById('sw-status').innerText = 'Failed';
+                    document.getElementById('sw-status').style.color = 'var(--error)';
+                    log('SW registration failed: ' + err, 'error');
+                });
+            });
+        } else {
+            document.getElementById('sw-status').innerText = 'Not Supported';
+            log('Service Workers not supported', 'error');
+        }
+
+        function updateNotifStatus() {
+            const statusEl = document.getElementById('notif-status');
+            if (!('Notification' in window)) {
+                statusEl.innerText = 'Not Supported';
+                return;
+            }
+            statusEl.innerText = Notification.permission;
+            statusEl.style.color = Notification.permission === 'granted' ? 'var(--success)' : 'var(--error)';
+        }
+        updateNotifStatus();
+
+        // --- Notifications Lab ---
+        async function requestNotifPermission() {
+            if (!('Notification' in window)) {
+                log('Notifications not supported by this browser', 'error');
+                return;
+            }
+            try {
+                const perm = await Notification.requestPermission();
+                updateNotifStatus();
+                log('Notification permission: ' + perm, perm === 'granted' ? 'success' : 'error');
+            } catch (e) {
+                log('Failed to request notification permission: ' + e, 'error');
+            }
+        }
+
+        function showLocalNotif(title, options) {
+            if (swRegistration && 'showNotification' in swRegistration) {
+                swRegistration.showNotification(title, options);
+            } else {
+                new Notification(title, options);
+            }
+        }
+
+        function sendInstantNotif() {
+            if (Notification.permission !== 'granted') {
+                log('Cannot send notification, permission denied', 'error');
+                return;
+            }
+            log('Sending instant notification...', 'info');
+            const time = new Date().toLocaleTimeString();
+            showLocalNotif('Instant Notification', {
+                body: `Triggered at ${time}. Hello from PWA Test!`,
+                icon: './icon-192.png',
+                vibrate: [200, 100, 200]
+            });
+            log('Instant notification sent', 'success');
+        }
+
+        function scheduleNotif(delayMs, label) {
+            if (Notification.permission !== 'granted') {
+                log('Cannot schedule notification, permission denied', 'error');
+                return;
+            }
+            log(`Scheduling '${label}' in ${delayMs/1000}s...`, 'info');
+            
+            const timeTrigger = new Date(Date.now() + delayMs).toLocaleTimeString();
+            const options = {
+                body: `Scheduled to trigger around ${timeTrigger}.`,
+                icon: './icon-192.png',
+                vibrate: [200, 100, 200]
+            };
+
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SCHEDULE_NOTIFICATION',
+                    id: Date.now().toString(),
+                    title: `Scheduled: ${label}`,
+                    options: options,
+                    delay: delayMs
+                });
+                log(`Timer passed to Service Worker for ${label}`, 'success');
+            } else {
+                log('No active Service Worker, falling back to main thread setTimeout', 'error');
+                setTimeout(() => {
+                    showLocalNotif(`Scheduled: ${label}`, options);
+                }, delayMs);
+            }
+        }
+
+        function schedulePersistent(intervalMs, label) {
+            if (Notification.permission !== 'granted') {
+                log('Cannot schedule notification, permission denied', 'error');
+                return;
+            }
+            log(`Scheduling persistent '${label}' every ${intervalMs/1000}s...`, 'info');
+            
+            const options = {
+                originalBody: `This is a recurring persistent reminder.`,
+                icon: './icon-192.png',
+                vibrate: [300, 100, 300, 100, 300]
+            };
+
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'PERSISTENT_NOTIFICATION',
+                    id: Date.now().toString(),
+                    title: label,
+                    options: options,
+                    interval: intervalMs
+                });
+                log(`Interval passed to Service Worker for ${label}`, 'success');
+            } else {
+                log('No active Service Worker, falling back to main thread setInterval', 'error');
+                setInterval(() => {
+                    options.body = `Triggered at ${new Date().toLocaleTimeString()}\n${options.originalBody}`;
+                    showLocalNotif(label, options);
+                }, intervalMs);
+            }
+        }
+
+        function cancelAllNotifs() {
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'CANCEL_ALL' });
+                log('Cancelled all scheduled notifications in Service Worker', 'success');
+            } else {
+                log('No active Service Worker to cancel tasks', 'error');
+            }
+        }
+
+        // --- Device API Tests ---
+        let mediaStream = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        async function testCamera() {
+            log('Requesting camera access...', 'info');
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('camera-preview');
+                video.srcObject = mediaStream;
+                video.style.display = 'block';
+                document.getElementById('stop-cam-btn').style.display = 'block';
+                log('Camera access granted and stream started', 'success');
+            } catch (err) {
+                log('Camera error: ' + err, 'error');
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+            document.getElementById('camera-preview').style.display = 'none';
+            document.getElementById('stop-cam-btn').style.display = 'none';
+            log('Camera stopped', 'info');
+        }
+
+        async function testMicrophone() {
+            log('Requesting microphone access...', 'info');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                log('Microphone access granted. Recording for 5 seconds...', 'success');
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audioEl = document.getElementById('audio-playback');
+                    audioEl.src = audioUrl;
+                    audioEl.style.display = 'block';
+                    log('Recording finished. You can play it back now.', 'success');
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                
+                mediaRecorder.start();
+                setTimeout(() => {
+                    if(mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                }, 5000);
+            } catch (err) {
+                log('Microphone error: ' + err, 'error');
+            }
+        }
+
+        async function testQRCode() {
+            log('Testing QR Code Scanner...', 'info');
+            if ('BarcodeDetector' in window) {
+                log('BarcodeDetector API supported. Starting camera...', 'success');
+                try {
+                    await testCamera();
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    const video = document.getElementById('camera-preview');
+                    
+                    const interval = setInterval(async () => {
+                        if (!mediaStream) {
+                            clearInterval(interval);
+                            return;
+                        }
+                        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                            try {
+                                const codes = await detector.detect(video);
+                                if (codes.length > 0) {
+                                    log(`QR Found: ${codes[0].rawValue}`, 'success');
+                                    stopCamera();
+                                    clearInterval(interval);
+                                    alert(`QR Code detected: ${codes[0].rawValue}`);
+                                }
+                            } catch (e) {
+                                // ignore detection errors
+                            }
+                        }
+                    }, 500);
+                } catch (e) {
+                    log('Error setting up QR scanner: ' + e, 'error');
+                }
+            } else {
+                log('BarcodeDetector API not supported on this device/browser. Opening standard camera view instead.', 'error');
+                testCamera();
+            }
+        }
+
+        function testVibration() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 500]);
+                log('Vibrated device', 'success');
+            } else {
+                log('Vibration API not supported', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
