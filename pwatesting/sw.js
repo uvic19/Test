@@ -1,3 +1,27 @@
+importScripts('https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.11.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyDStGGVyGDuB4Zm8P2ljVSUWszdVrQEIn4",
+  authDomain: "viewly-99919.firebaseapp.com",
+  projectId: "viewly-99919",
+  storageBucket: "viewly-99919.firebasestorage.app",
+  messagingSenderId: "786829676595",
+  appId: "1:786829676595:web:f3aef33321cf322d065346"
+});
+
+const messaging = firebase.messaging();
+messaging.onBackgroundMessage(function(payload) {
+  console.log('[sw.js] Received background message ', payload);
+  const notificationTitle = payload.notification?.title || 'Background Message';
+  const notificationOptions = {
+    body: payload.notification?.body,
+    icon: './icon-192.png'
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
 const CACHE_NAME = 'pwa-test-cache-v1';
 const urlsToCache = [
   './',
