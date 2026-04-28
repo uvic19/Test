@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.netlify.phenomenal_starship_0ab618.twa",
+        "sha256_cert_fingerprints": ["46:59:29:38:23:6D:5C:FE:7C:EE:C6:2D:D9:AE:67:95:72:A5:69:5F:FE:D9:AF:6C:C5:30:1C:CB:CB:1A:33:E8"]
+      }
+    }]

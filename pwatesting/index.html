@@ -262,7 +262,8 @@
             showLocalNotif('Instant Notification', {
                 body: `Triggered at ${time}. Hello from PWA Test!`,
                 icon: './icon-192.png',
-                vibrate: [200, 100, 200]
+                vibrate: [200, 100, 200],
+                requireInteraction: true
             });
             log('Instant notification sent', 'success');
         }
@@ -278,7 +279,8 @@
             const options = {
                 body: `Scheduled to trigger around ${timeTrigger}.`,
                 icon: './icon-192.png',
-                vibrate: [200, 100, 200]
+                vibrate: [200, 100, 200],
+                requireInteraction: true
             };
 
             if (navigator.serviceWorker.controller) {

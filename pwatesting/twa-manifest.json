@@ -1,0 +1,52 @@
+{
+  "packageId": "app.netlify.phenomenal_starship_0ab618.twa",
+  "host": "phenomenal-starship-0ab618.netlify.app",
+  "name": "PWA Test App",
+  "launcherName": "PWATest",
+  "display": "standalone",
+  "themeColor": "#0D47A1",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": true,
+  "startUrl": "/index.html",
+  "iconUrl": "https://phenomenal-starship-0ab618.netlify.app/icon-512.png",
+  "maskableIconUrl": "https://phenomenal-starship-0ab618.netlify.app/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "D:\\Coding\\Web\\Test\\pwatesting\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://phenomenal-starship-0ab618.netlify.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://phenomenal-starship-0ab618.netlify.app/",
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [
+    {
+      "name": "android",
+      "value": "46:59:29:38:23:6D:5C:FE:7C:EE:C6:2D:D9:AE:67:95:72:A5:69:5F:FE:D9:AF:6C:C5:30:1C:CB:CB:1A:33:E8"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
+}
